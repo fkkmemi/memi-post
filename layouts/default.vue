@@ -5,9 +5,10 @@ const drawer = ref(false)
   <q-layout view="hHh lpR fFf">
     <q-header elevated class="bg-primary text-white" height-hint="98">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="drawer = !drawer" />
+        <q-btn dense flat round icon="mdi-menu" @click="drawer = !drawer" />
 
         <q-toolbar-title> memi-post </q-toolbar-title>
+        <AuthBtn />
       </q-toolbar>
     </q-header>
 

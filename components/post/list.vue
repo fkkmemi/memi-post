@@ -1,16 +1,7 @@
 <script setup lang="ts">
-const { read } = usePost()
+const { postCollection } = usePost()
 
-const posts = ref<Post[]>([])
-const readPost = async () => {
-  // posts.value = await read()
-
-  posts.value = [
-    { id: 1, title: "post 1", body: "body 1" },
-    { id: 2, title: "post 2", body: "body 2" },
-    { id: 3, title: "post 3", body: "body 3" },
-  ]
-}
+const posts = useCollection(postCollection)
 </script>
 <template>
   <q-card>
@@ -19,17 +10,11 @@ const readPost = async () => {
       <PostAdd :posts="posts" />
     </q-toolbar>
     <q-card-section>
-      <q-list>
-        <q-item v-for="post in posts" :key="post.id">
-          <q-item-section>
-            <q-item-label>{{ post.title }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
+      <PostItem v-for="post in posts" :key="post.id" :post="post" />
     </q-card-section>
 
     <q-card-actions>
-      <q-btn flat label="read" @click="readPost" />
+      <q-btn flat label="read" @click="" />
     </q-card-actions>
   </q-card>
 </template>
