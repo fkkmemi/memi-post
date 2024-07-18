@@ -8,9 +8,5 @@ const ars = [
 </script>
 
 <template>
-  <div>
-    <a>jiji </a>
-    <strong>{{ count }}</strong>
-    <button @click="count++">up</button>
-  </div>
+  <q-page padding> here </q-page>
 </template>
