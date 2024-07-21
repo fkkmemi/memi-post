@@ -2,7 +2,8 @@
 const user = useCurrentUser()
 const { signInWithGoogle, signOut } = useAuth()
 const login = async () => {
-  await signInWithGoogle()
+  const r = await signInWithGoogle()
+  console.log("urser", r)
 }
 
 const logout = async () => {

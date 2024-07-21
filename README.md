@@ -14,15 +14,6 @@ yarn
 
 ## firebase
 
-.firebaserc 파일 만들고 추가
-
-eg)
-**.firebaserc**
-
-```json
-{
-  "projects": {
-    "default": "memi-post-2"
-  }
-}
+```bash
+$ firebase use --add
 ```

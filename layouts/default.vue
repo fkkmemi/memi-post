@@ -17,7 +17,7 @@ const drawer = ref(false)
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <slot />
     </q-page-container>
 
     <q-footer elevated class="bg-grey-8 text-white"> </q-footer>
