@@ -10,6 +10,7 @@ const created = fn.user().onCreate((user) => {
 
 const deleted = fn.user().onDelete((user) => {
   console.log("deleted", user)
+
   return deleteUser(user)
 })
 
