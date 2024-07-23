@@ -5,6 +5,7 @@ import {
   doc,
   deleteDoc,
   updateDoc,
+  Timestamp,
 } from "firebase/firestore"
 import type {
   DocumentData,
@@ -13,9 +14,38 @@ import type {
 } from "firebase/firestore"
 import { firestoreDefaultConverter } from "vuefire"
 
-export interface Post {
+export interface PostImage {
+  src: string
+  alt: string
   title: string
-  body: string
+}
+export interface Post {
+  // user account
+  uid: string
+  displayName: string
+  photoURL: string
+
+  // post
+  title: string
+  summary: string
+
+  // date
+  createdAt: Timestamp
+  updatedAt: Timestamp
+
+  // extra
+  category: string // '운동', '식사', '생활'
+  tags: string[]
+  type: string // '공지', '일반', '공지'
+  count: {
+    view: number
+    like: number
+    hate: number
+    reject: number
+    comment: number
+    attachment: number
+  }
+  images: PostImage[]
 }
 export interface PostEx extends Post {
   id: string
@@ -38,18 +68,12 @@ export const usePost = () => {
 
   const postCollection = collection(db, collectionName).withConverter(converter)
 
-  const add = (post: Post) => {
-    const postRef = doc(postCollection)
+  const generateId = () => doc(postCollection).id
+
+  const add = (id: string, post: Post) => {
+    const postRef = doc(postCollection, id)
 
     setDoc(postRef, post)
-  }
-
-  const read = (posts: Post[]) => {
-    // posts.push({
-    //   id: Math.random().toString(36).substr(2, 9),
-    //   title: "Title " + Math.random().toString(36).substr(2, 9),
-    //   body: "Body 1",
-    // })
   }
 
   const update = (id: string, post: PartialWithFieldValue<Post>) => {
@@ -61,6 +85,7 @@ export const usePost = () => {
   }
 
   return {
+    generateId,
     add,
     postCollection,
     update,
