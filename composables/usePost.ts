@@ -6,13 +6,14 @@ import {
   deleteDoc,
   updateDoc,
   Timestamp,
-} from "firebase/firestore"
+} from 'firebase/firestore'
 import type {
   DocumentData,
   FirestoreDataConverter,
   PartialWithFieldValue,
-} from "firebase/firestore"
-import { firestoreDefaultConverter } from "vuefire"
+} from 'firebase/firestore'
+import { firestoreDefaultConverter } from 'vuefire'
+import { uploadString, ref } from 'firebase/storage'
 
 export interface PostImage {
   src: string
@@ -53,7 +54,9 @@ export interface PostEx extends Post {
 
 export const usePost = () => {
   const db = useFirestore()
-  const collectionName = "posts"
+  const storage = useFirebaseStorage()
+  const collectionName = 'userPosts'
+  const user = useCurrentUser()
 
   const converter: FirestoreDataConverter<PostEx, DocumentData> = {
     toFirestore: firestoreDefaultConverter.toFirestore,
@@ -70,10 +73,18 @@ export const usePost = () => {
 
   const generateId = () => doc(postCollection).id
 
-  const add = (id: string, post: Post) => {
+  const userUploadContent = (uid: string, id: string, content: string) => {
+    const path = `userPosts/${uid}/${id}/content.json`
+    const postRef = ref(storage, path)
+    return uploadString(postRef, content)
+  }
+
+  const add = async (id: string, post: Post, content: string) => {
     const postRef = doc(postCollection, id)
 
-    setDoc(postRef, post)
+    await userUploadContent(post.uid, id, content)
+
+    await setDoc(postRef, post)
   }
 
   const update = (id: string, post: PartialWithFieldValue<Post>) => {

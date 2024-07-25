@@ -1,40 +1,40 @@
 <script setup lang="ts">
-import { Timestamp } from "firebase/firestore"
-import { QForm } from "quasar"
+import { Timestamp } from 'firebase/firestore'
+import { QForm } from 'quasar'
 const props = defineProps<{
   id: string
 }>()
 const user = useCurrentUser()
 
 const rule = {
-  title: [(v: string) => (v && v.length > 0) || "제목을 입력해주세요"],
-  category: [(v: string) => (v && v.length > 0) || "카테고리를 입력해주세요"],
-  content: [(v: string) => (v && v.length > 0) || "내용을 입력해주세요"],
+  title: [(v: string) => (v && v.length > 0) || '제목을 입력해주세요'],
+  category: [(v: string) => (v && v.length > 0) || '카테고리를 입력해주세요'],
+  content: [(v: string) => (v && v.length > 0) || '내용을 입력해주세요'],
 }
 
 const { add } = usePost()
 const loading = ref(false)
-const title = ref("")
-const content = ref("")
+const title = ref('')
+const content = ref('')
 const tags = ref<string[]>([])
-const type = ref("일반")
-const category = ref("")
+const type = ref('일반')
+const category = ref('')
 const images = ref<PostImage[]>([])
 const form = ref<QForm>()
 
 const submit = async () => {
   try {
-    if (!form.value) throw Error("form이 없습니다")
+    if (!form.value) throw Error('form이 없습니다')
     form.value.validate()
     loading.value = true
-    if (!user.value) throw Error("로그인이 필요합니다")
-    if (!title.value) throw Error("제목을 입력해주세요")
-    if (!content.value) throw Error("내용을 입력해주세요")
-    if (!category.value) throw Error("카테고리를 입력해주세요")
+    if (!user.value) throw Error('로그인이 필요합니다')
+    if (!title.value) throw Error('제목을 입력해주세요')
+    if (!content.value) throw Error('내용을 입력해주세요')
+    if (!category.value) throw Error('카테고리를 입력해주세요')
     const post: Post = {
       uid: user.value.uid,
-      displayName: user.value.displayName || "",
-      photoURL: user.value.photoURL || "",
+      displayName: user.value.displayName || '',
+      photoURL: user.value.photoURL || '',
       title: title.value,
       summary: content.value.slice(0, 100),
       createdAt: Timestamp.now(),
@@ -52,10 +52,10 @@ const submit = async () => {
       },
       images: images.value,
     }
-    await add(props.id, post)
+    await add(props.id, post, content.value)
   } catch (e) {
     console.error(e)
-    alert("알수 없는 에러")
+    alert('알수 없는 에러')
   } finally {
     loading.value = false
   }

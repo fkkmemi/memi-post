@@ -1,12 +1,37 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    function isSigned() {
+      return request.auth != null;
+    }
+    
+    function isPossibleSize() {
+      return request.resource.size < 20 * 1024 * 1024;
+    }
+    function isPossibleUpload() {
+      return isPossibleSize();
+    }
+    function isOwn (uid) {
+      return isSigned() && request.auth.uid == uid //firestore.exists(/databases/(default)/documents/users/$(request.auth.id));
+    }
+
+    function isAdmin () {
+      return isSigned() && firestore.get(/databases/(default)/documents/users/$(request.auth.id)).type == 'admin';
+    }
+
+    match /userPosts/{uid}/{id}/{allPaths=**} {   
+      allow read: if isOwn(uid) || isAdmin();
+      allow create: if isOwn(uid) && isPossibleUpload();
+      allow update: if (isOwn(uid) && isPossibleUpload()) || isAdmin();
+      allow delete: if isOwn(uid) || isAdmin();
+    }
+
+    match /userAttachments/{uid}/{id}/{allPaths=**} {
+      allow read: if isOwn(uid) || isAdmin()
+      allow create: if isOwn(uid) && isPossibleUpload();
+      allow update: if (isOwn(uid) && isPossibleUpload()) || isAdmin();
+      allow delete: if isOwn(uid) && isAdmin();
     }
   }
 }

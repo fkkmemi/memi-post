@@ -8,7 +8,10 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy:fs": "firebase deploy --only firestore"
+    "deploy:hs": "yarn build -- --preset=firebase && firebase deploy --only functions:nuxt,hosting",
+    "deploy:fs": "firebase deploy --only firestore",
+    "deploy:fn": "firebase deploy --only functions:index",
+    "deploy:st": "firebase deploy --only storage"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.12",
