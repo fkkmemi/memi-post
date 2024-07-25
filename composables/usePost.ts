@@ -14,6 +14,7 @@ import type {
 } from 'firebase/firestore'
 import { firestoreDefaultConverter } from 'vuefire'
 import { uploadString, ref } from 'firebase/storage'
+import type { JSONContent } from '@tiptap/core'
 
 export interface PostImage {
   src: string
@@ -79,10 +80,10 @@ export const usePost = () => {
     return uploadString(postRef, content)
   }
 
-  const add = async (id: string, post: Post, content: string) => {
+  const write = async (id: string, post: Post, content: JSONContent) => {
     const postRef = doc(postCollection, id)
 
-    await userUploadContent(post.uid, id, content)
+    await userUploadContent(post.uid, id, JSON.stringify(content))
 
     await setDoc(postRef, post)
   }
@@ -97,7 +98,7 @@ export const usePost = () => {
 
   return {
     generateId,
-    add,
+    write,
     postCollection,
     update,
     remove,
