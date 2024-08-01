@@ -1,7 +1,10 @@
-import { FirestoreDataConverter, FieldValue } from "firebase-admin/firestore"
-import { UserRecord } from "firebase-admin/auth"
-import { createHash } from "crypto"
-import { db } from "../plugins/firebase"
+import { FirestoreDataConverter, FieldValue } from 'firebase-admin/firestore'
+import * as functions from 'firebase-functions'
+import { UserRecord } from 'firebase-admin/auth'
+import { createHash } from 'crypto'
+import { db } from '../plugins/firebase'
+import { deletePostsByUid } from './post'
+import { deleteAttachmentsByUid } from './attachment'
 
 export class User {
   constructor(
@@ -12,7 +15,7 @@ export class User {
   ) {}
 }
 
-const collectionName = "users"
+const collectionName = 'users'
 
 const converter: FirestoreDataConverter<User> = {
   toFirestore(model) {
@@ -25,8 +28,8 @@ const converter: FirestoreDataConverter<User> = {
 }
 const collection = db.collection(collectionName).withConverter(converter)
 export const createUser = (userRecord: UserRecord) => {
-  if (!userRecord.email) throw Error("invalid email")
-  const hash = createHash("md5").update(userRecord.uid).digest("hex")
+  if (!userRecord.email) throw Error('invalid email')
+  const hash = createHash('md5').update(userRecord.uid).digest('hex')
   const photoURL =
     userRecord.photoURL || `https://www.gravatar.com/avatar/${hash}`
   // const user = new User(
@@ -38,9 +41,9 @@ export const createUser = (userRecord: UserRecord) => {
   const user = {
     createdAt: FieldValue.serverTimestamp(),
     email: userRecord.email,
-    displayName: userRecord.displayName || "",
+    displayName: userRecord.displayName || '',
     photoURL: photoURL,
-    role: "user",
+    role: 'user',
     updatedAt: FieldValue.serverTimestamp(),
     visitedAt: FieldValue.serverTimestamp(),
   }
@@ -50,3 +53,19 @@ export const createUser = (userRecord: UserRecord) => {
 export const deleteUser = (userRecord: UserRecord) => {
   return collection.doc(userRecord.uid).delete()
 }
+
+const fn = functions.region('asia-northeast3').auth
+
+const created = fn.user().onCreate((user) => {
+  console.log('created', user)
+  return createUser(user)
+})
+
+const deleted = fn.user().onDelete(async (user) => {
+  console.log('deleted', user)
+  await deletePostsByUid(user.uid)
+  await deleteAttachmentsByUid(user.uid)
+  await deleteUser(user)
+})
+
+export default { created, deleted }
