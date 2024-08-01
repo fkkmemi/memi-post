@@ -17,7 +17,10 @@ const rule = {
 const { write } = usePost()
 const loading = ref(false)
 const title = ref('')
-const content = ref<JSONContent>({})
+const content = ref<JSONContent>({
+  type: 'doc',
+  content: [],
+})
 const tags = ref<string[]>([])
 const type = ref('일반')
 const category = ref('')
@@ -76,7 +79,7 @@ const submit = async () => {
         <q-input v-model="category" label="카테고리" :rules="rule.category" />
       </q-card-section>
       <q-card-section>
-        <TiptapEditor v-model="content" />
+        <TiptapEditor v-model="content" :target-id="id" :target-type="'post'" />
       </q-card-section>
       <q-card-actions>
         <q-space />

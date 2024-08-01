@@ -263,6 +263,23 @@
           icon="mdi-redo"
           class="gt-md"
         />
+        <q-btn flat outline dense icon="mdi-image">
+          <q-menu>
+            <q-card>
+              <q-card-section>
+                <q-file v-model="file" label="파일" />
+                <q-input v-model="description" label="설명" />
+              </q-card-section>
+              <q-card-section>
+                <q-img :src="viewImage" />
+              </q-card-section>
+              <q-card-actions>
+                <q-space />
+                <q-btn @click="save" label="저장" icon="mdi-content-save" />
+              </q-card-actions>
+            </q-card>
+          </q-menu>
+        </q-btn>
       </q-btn-group>
     </div>
     <TiptapEditorContent :editor="editor" />
@@ -274,17 +291,26 @@ import type { JSONContent } from '@tiptap/core'
 
 const props = defineProps<{
   modelValue: JSONContent
+  targetId: string
+  targetType: string
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [JSONContent]
 }>()
 
+const { setAttachment } = useAttachment()
+
+const viewImage = computed(() => {
+  if (!file.value) return ''
+  return URL.createObjectURL(file.value)
+})
+
 const editor = useEditor({
   content: props.modelValue,
   extensions: [TiptapStarterKit],
   onUpdate: (content) => {
-    console.log(content.editor.getJSON())
+    // console.log(content.editor.getJSON())
     // console.log(content.editor.getHTML())
     emit('update:modelValue', content.editor.getJSON())
   },
@@ -294,4 +320,25 @@ onBeforeUnmount(() => {
   if (!editor.value) return
   editor.value.destroy()
 })
+
+const file = ref<File | null>(null)
+const description = ref('')
+const loading = ref(false)
+
+const save = async () => {
+  try {
+    loading.value = true
+    if (!file.value) throw Error('파일을 선택해주세요')
+
+    await setAttachment(
+      props.targetId,
+      props.targetType,
+      description.value,
+      '',
+      file.value,
+    )
+  } finally {
+    loading.value = false
+  }
+}
 </script>
