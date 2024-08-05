@@ -1,8 +1,17 @@
-import { Timestamp, collection, doc, setDoc } from 'firebase/firestore'
+import {
+  Timestamp,
+  collection,
+  doc,
+  setDoc,
+  where,
+  query,
+  deleteDoc,
+} from 'firebase/firestore'
 import type {
   FirestoreDataConverter,
   DocumentData,
   PartialWithFieldValue,
+  QueryConstraint,
 } from 'firebase/firestore'
 import { firestoreDefaultConverter } from 'vuefire'
 import { ref as stRef, uploadBytes, getDownloadURL } from 'firebase/storage'
@@ -91,9 +100,30 @@ export const useAttachment = () => {
     }
 
     await setDoc(docRef, attachment)
+
+    return {
+      src: url,
+      alt: docRef.id,
+    }
+  }
+
+  const queryAttachmentsByTargetId = (targetId: string) => {
+    const qs: QueryConstraint[] = []
+    qs.push(
+      where('targetId', '==', targetId),
+      // orderBy('createdAt', 'desc'),
+    )
+    const q = query(collectionWithConverter, ...qs)
+    return q
+  }
+
+  const deleteAttachment = (id: string) => {
+    return deleteDoc(doc(collectionWithConverter, id))
   }
 
   return {
     setAttachment,
+    queryAttachmentsByTargetId,
+    deleteAttachment,
   }
 }

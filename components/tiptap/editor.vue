@@ -264,7 +264,7 @@
           class="gt-md"
         />
         <q-btn flat outline dense icon="mdi-image">
-          <q-menu>
+          <q-menu @before-show="initImage">
             <q-card>
               <q-card-section>
                 <q-file v-model="file" label="파일" />
@@ -275,12 +275,24 @@
               </q-card-section>
               <q-card-actions>
                 <q-space />
-                <q-btn @click="save" label="저장" icon="mdi-content-save" />
+                <q-btn
+                  @click="save"
+                  label="저장"
+                  icon="mdi-content-save"
+                  color="primary"
+                  :loading="loading"
+                  v-close-popup
+                />
               </q-card-actions>
             </q-card>
           </q-menu>
         </q-btn>
       </q-btn-group>
+    </div>
+    <div>{{ attachments }}</div>
+    <q-separator />
+    <div>
+      {{ modelValue }}
     </div>
     <TiptapEditorContent :editor="editor" />
   </div>
@@ -288,6 +300,7 @@
 
 <script setup lang="ts">
 import type { JSONContent } from '@tiptap/core'
+import Image from '@tiptap/extension-image'
 
 const props = defineProps<{
   modelValue: JSONContent
@@ -299,7 +312,8 @@ const emit = defineEmits<{
   'update:modelValue': [JSONContent]
 }>()
 
-const { setAttachment } = useAttachment()
+const { setAttachment, queryAttachmentsByTargetId, deleteAttachment } =
+  useAttachment()
 
 const viewImage = computed(() => {
   if (!file.value) return ''
@@ -308,11 +322,15 @@ const viewImage = computed(() => {
 
 const editor = useEditor({
   content: props.modelValue,
-  extensions: [TiptapStarterKit],
+  extensions: [TiptapStarterKit, Image],
   onUpdate: (content) => {
     // console.log(content.editor.getJSON())
     // console.log(content.editor.getHTML())
-    emit('update:modelValue', content.editor.getJSON())
+    const json = content.editor.getJSON()
+    if (!json) return
+    console.log('json', json)
+    findAndRemoveAttachment(json)
+    emit('update:modelValue', json)
   },
 })
 
@@ -329,16 +347,38 @@ const save = async () => {
   try {
     loading.value = true
     if (!file.value) throw Error('파일을 선택해주세요')
+    if (!editor.value) throw Error('에디터를 초기화 중입니다')
 
-    await setAttachment(
+    const { src, alt } = await setAttachment(
       props.targetId,
       props.targetType,
       description.value,
       '',
       file.value,
     )
+    const title = `${attachments.value.length}. ${file.value.name}`
+    editor.value.chain().focus().setImage({ src, alt, title }).run()
   } finally {
     loading.value = false
+  }
+}
+const initImage = () => {
+  file.value = null
+  description.value = ''
+}
+
+const attachments = useCollection(() =>
+  queryAttachmentsByTargetId(props.targetId),
+)
+
+const findAndRemoveAttachment = (content: JSONContent) => {
+  const cs = findImagesFromContent(content)
+  const as = attachments.value
+  if (!as) return
+
+  for (const a of as) {
+    if (cs.map((c) => c?.alt).includes(a.id)) continue
+    deleteAttachment(a.id)
   }
 }
 </script>
