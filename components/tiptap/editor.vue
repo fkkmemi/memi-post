@@ -276,11 +276,10 @@
               <q-card-actions>
                 <q-space />
                 <q-btn
-                  @click="save"
+                  @click="imageSave"
                   label="저장"
                   icon="mdi-content-save"
                   color="primary"
-                  :loading="loading"
                   v-close-popup
                 />
               </q-card-actions>
@@ -301,6 +300,7 @@
 <script setup lang="ts">
 import type { JSONContent } from '@tiptap/core'
 import Image from '@tiptap/extension-image'
+import { useQuasar } from 'quasar'
 
 const props = defineProps<{
   modelValue: JSONContent
@@ -315,6 +315,8 @@ const emit = defineEmits<{
 const { setAttachment, queryAttachmentsByTargetId, deleteAttachment } =
   useAttachment()
 
+const { loading } = useQuasar()
+
 const viewImage = computed(() => {
   if (!file.value) return ''
   return URL.createObjectURL(file.value)
@@ -328,9 +330,30 @@ const editor = useEditor({
     // console.log(content.editor.getHTML())
     const json = content.editor.getJSON()
     if (!json) return
-    console.log('json', json)
+
     findAndRemoveAttachment(json)
     emit('update:modelValue', json)
+  },
+  editorProps: {
+    // attributes: {
+    //   class: 'prose max-w-none',
+    // },
+    handlePaste: (view, event) => {
+      const d = event.clipboardData
+      if (!d) return false
+      for (const f of d.files) {
+        save(f)
+      }
+      return true
+    },
+    handleDrop: (view, event) => {
+      const d = event.dataTransfer
+      if (!d) return false
+      for (const f of d.files) {
+        save(f)
+      }
+      return true
+    },
   },
 })
 
@@ -341,12 +364,14 @@ onBeforeUnmount(() => {
 
 const file = ref<File | null>(null)
 const description = ref('')
-const loading = ref(false)
 
-const save = async () => {
+const save = async (f: File) => {
   try {
-    loading.value = true
-    if (!file.value) throw Error('파일을 선택해주세요')
+    loading.show({
+      message: '이미지를 업로드 중입니다',
+    })
+    // if (!file.value) throw Error('파일을 선택해주세요')
+    if (!f) throw Error('파일을 선택해주세요')
     if (!editor.value) throw Error('에디터를 초기화 중입니다')
 
     const { src, alt } = await setAttachment(
@@ -354,13 +379,18 @@ const save = async () => {
       props.targetType,
       description.value,
       '',
-      file.value,
+      f,
     )
-    const title = `${attachments.value.length}. ${file.value.name}`
+    const title = `${attachments.value.length}. ${f.name}`
     editor.value.chain().focus().setImage({ src, alt, title }).run()
   } finally {
-    loading.value = false
+    loading.hide()
   }
+}
+
+const imageSave = async () => {
+  if (!file.value) return
+  await save(file.value)
 }
 const initImage = () => {
   file.value = null

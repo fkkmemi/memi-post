@@ -8,6 +8,7 @@ export default defineNuxtConfig({
   modules: ['nuxt-quasar-ui', 'nuxt-vuefire', 'nuxt-tiptap-editor'],
   quasar: {
     iconSet: 'mdi-v7',
+    plugins: ['Notify', 'Loading'],
   },
   vuefire: {
     config: firebaseConfig,
