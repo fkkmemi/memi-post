@@ -15,6 +15,7 @@ import type {
 } from 'firebase/firestore'
 import { firestoreDefaultConverter } from 'vuefire'
 import { ref as stRef, uploadBytes, getDownloadURL } from 'firebase/storage'
+import imageCompression from 'browser-image-compression'
 
 export interface Attachment {
   uid: string
@@ -27,7 +28,7 @@ export interface Attachment {
   size: number
   type: string
   url: string
-  thumnail?: string
+  thumnail: string
 }
 
 export interface AttachmentEx extends Attachment {
@@ -68,6 +69,16 @@ export const useAttachment = () => {
     return uploadBytes(r, file)
   }
 
+  const imageCompressFile = (file: File) => {
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 640,
+      useWebWorker: true,
+    }
+
+    return imageCompression(file, options)
+  }
+
   const setAttachment = async (
     targetId: string,
     targetType: string,
@@ -79,6 +90,13 @@ export const useAttachment = () => {
     if (!user.value) throw new Error('User is not signed in')
     const uid = user.value.uid
     const docRef = doc(collectionWithConverter)
+
+    // todo: mimetype only image if (file.mimeType.startsWith('image/'))
+
+    const thumnailFile = await imageCompressFile(file)
+    const thumnailPath = attachmentPath(uid, docRef.id, 'thumnail-' + file.name)
+    const thumnailSn = await uploadFile(thumnailPath, thumnailFile)
+    const thumnail = await getDownloadURL(thumnailSn.ref)
 
     const p = attachmentPath(uid, docRef.id, file.name)
 
@@ -96,7 +114,7 @@ export const useAttachment = () => {
       size: file.size,
       type: file.type,
       url,
-      // thumnail: ''
+      thumnail,
     }
 
     await setDoc(docRef, attachment)
