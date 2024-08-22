@@ -346,12 +346,10 @@ const editor = useEditor({
       }
       return true
     },
-    handleDrop: (view, event) => {
+    handleDrop: (view, event, slice, moved) => {
       const d = event.dataTransfer
       if (!d) return false
-      for (const f of d.files) {
-        save(f)
-      }
+      imageSaves(d.files)
       return true
     },
   },
@@ -367,9 +365,9 @@ const description = ref('')
 
 const save = async (f: File) => {
   try {
-    loading.show({
-      message: '이미지를 업로드 중입니다',
-    })
+    // loading.show({
+    //   message: '이미지를 업로드 중입니다',
+    // })
     // if (!file.value) throw Error('파일을 선택해주세요')
     if (!f) throw Error('파일을 선택해주세요')
     if (!editor.value) throw Error('에디터를 초기화 중입니다')
@@ -384,13 +382,31 @@ const save = async (f: File) => {
     const title = `${attachments.value.length}. ${f.name}`
     editor.value.chain().focus().setImage({ src, alt, title }).run()
   } finally {
-    loading.hide()
+    // loading.hide()
   }
+}
+
+const imageSaves = async (files: FileList) => {
+  loading.show({
+    message: '이미지를 업로드 중입니다',
+  })
+  const fileArray = Array.from(files)
+  for (const f of fileArray) {
+    await save(f)
+  }
+
+  loading.hide()
 }
 
 const imageSave = async () => {
   if (!file.value) return
+
+  loading.show({
+    message: '이미지를 업로드 중입니다',
+  })
   await save(file.value)
+
+  loading.hide()
 }
 const initImage = () => {
   file.value = null
@@ -402,6 +418,7 @@ const attachments = useCollection(() =>
 )
 
 const findAndRemoveAttachment = (content: JSONContent) => {
+  if (loading.isActive) return
   const cs = findImagesFromContent(content)
   const as = attachments.value
   if (!as) return
