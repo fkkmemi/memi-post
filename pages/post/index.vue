@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { generateId } = usePost()
 
-const to = computed(() => `/post/${generateId()}/add`)
+const to = computed(() => `/post/${generateId()}/write`)
 </script>
 <template>
   <q-page padding>

@@ -6,6 +6,7 @@ import {
   deleteDoc,
   updateDoc,
   Timestamp,
+  getDoc,
 } from 'firebase/firestore'
 import type {
   DocumentData,
@@ -96,11 +97,19 @@ export const usePost = () => {
     return deleteDoc(doc(postCollection, id))
   }
 
+  const read = async (id: string) => {
+    const postRef = doc(postCollection, id)
+    const snapshot = await getDoc(postRef)
+    if (!snapshot.exists()) return null
+    return snapshot.data()
+  }
+
   return {
     generateId,
     write,
     postCollection,
     update,
     remove,
+    read,
   }
 }
